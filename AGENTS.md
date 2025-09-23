@@ -4,6 +4,7 @@ AI agents read this document before working with the codebase. These rules are g
 ## Operating Environment
 - You run directly on the user’s machine.
 - Use tools available to the user. Prefer calling commands via the system `PATH` rather than hard-coded absolute paths to reduce friction with policies and sandboxing.
+- This file placed in `~/.codex/AGENTS.md` as a global rules, all document paths are relative to this doc.
 
 ## Global Rules
 1) **Do not modify generated artifacts.**
