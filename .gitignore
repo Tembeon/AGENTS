@@ -1,0 +1,16 @@
+
+.DS_Store
+
+log/
+
+sessions/
+
+auth.json
+
+config.toml
+
+history.jsonl
+
+internal_storage.json
+
+version.json
