@@ -2,7 +2,7 @@
 This document describes general guidelines for a Flutter or Dart project. A project may additionally include other languages; in that case (if guidelines exist), use the supplementary documents for that specific language.
 
 ## Basic Rules
-- Before deciding to “write code,” consider alternative solutions, choose the best one, and implement it.
+- Before deciding to "write a feature", consider alternative solutions, choose the best one, and implement it.
 - Do not edit code-generated files (those ending with `*.g.dart`). Ask the user to run `dart build_runner` after making changes to related source files.
 - Public APIs must be documented with comments following Effective Dart doc style. Use `@template`, `@macro`, and `@docImport 'dart:async'` for documentation-only imports. If you are developing code of above-average complexity, explain in comments why the chosen approach was taken.
 - Use the pub-sub pattern for feature design unless specified otherwise. See the “Feature Design Example” section in this document.
