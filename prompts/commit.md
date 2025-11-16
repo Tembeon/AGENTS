@@ -21,6 +21,7 @@ Always follow this workflow:
         - Reply with a short message telling the user there are no staged changes yet.
         - DO NOT invent a commit message.
         - DO NOT ask the user for a diff.
+        - DO NOT proceed to later steps; staged changes can appear between steps, so rerun status if unsure.
     - If there ARE staged changes, continue.
 
 2. Get the diff of the staging area
