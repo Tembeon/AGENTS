@@ -1,47 +1,109 @@
-## File Purpose
-This document describes general guidelines for a Flutter or Dart project. A project may additionally include other languages; in that case (if guidelines exist), use the supplementary documents for that specific language.
+## Purpose
 
-## Basic Rules
-- Before deciding to "write a feature", consider alternative solutions, choose the best one, and implement it.
-- Do not edit code-generated files (those ending with `*.g.dart`). Ask the user to run `dart build_runner` after making changes to related source files.
-- Public APIs must be documented with comments following Effective Dart doc style. Use `@template`, `@macro`, and `@docImport 'dart:async'` for documentation-only imports. If you are developing code of above-average complexity, explain in comments why the chosen approach was taken.
-- Use the pub-sub pattern for feature design unless specified otherwise. See the “Feature Design Example” section in this document.
-- For every data class, always implement: `hashCode`, `operator ==`, and `copyWith`. Implement `copyWith` with `ValueGetter<T?>?` so that you can set a value to `null` and distinguish “passed null” from “not provided.” Typically, projects provide an extension for working with `ValueGetter` so `copyWith` logic reduces to `newGetter.or(this.oldGetter)`. If such an extension is missing, you can implement it yourself; the full code is:
+Use this playbook whenever you touch Flutter or pure Dart code. It now front-loads the prep work (so you always read the
+latest Dart/Flutter feature notes), then routes you to deeper documents, and finally summarizes the non‑negotiable
+standards.
+
+---
+
+## Prep Checklist (run before editing)
+
+1. Open [`dart_flutter_features.md`](dart_flutter_features.md) every session. Those release highlights are part of the
+   required context, not optional reading. Apply them proactively (dot shorthand in enum-heavy code, analyzer plugins
+   for custom linting, hooks for native assets, null-aware collection builders, and extension types for value objects).
+2. Skim the task-specific doc from the routing table below.
+3. Only after steps 1–2 start changing code, then finish with `dart format`/`dart analyze` via the Dart MCP tool.
+
+### Feature reminders from `dart_flutter_features.md`
+
+- **Dot shorthands** keep enums/constructors terse; provide an explicit type context whenever inference could widen to
+  `Object` or dynamic.
+- **Analyzer plugins** live under the `plugins:` stanza in `analysis_options.yaml`. Prefer plugins over ad-hoc scripts
+  when you need bespoke lint rules.
+- **Build hooks** (`hook/build.dart`) are the default for compiling native assets. Chain work via `BuildInput`/
+  `BuildOutput`.
+- **Null-aware collection elements** (`...?`, guarded `if`/`for`) make builder-style literals declarative—use them
+  instead
+  of surrounding `if != null` blocks.
+- **Extension types** wrap primitives without allocation. Reach for them when expressing IDs, handles, or validated
+  strings so call sites stay type-safe.
+
+---
+
+## Route Yourself
+
+Pick the scope that matches your task and open the linked module before editing:
+
+| Scenario                             | Start Here                                                       | Notes                                                                      |
+|--------------------------------------|------------------------------------------------------------------|----------------------------------------------------------------------------|
+| Quickly orienting yourself           | **Core Engineering Standards** (below)                           | High-level rules that apply everywhere.                                    |
+| Structuring features                 | [`feature_based_architecture.md`](feature_based_architecture.md) | Explains the feature-first folder layout, boundaries, and dependency flow. |
+| Designing a new feature/API          | [`how_to_new_feature.md`](how_to_new_feature.md)                 | Requirements → scope controllers → state controllers → UI.                 |
+| Need ValueGetter/copyWith semantics  | **Data Classes & `copyWith`** (below)                            | Includes reusable `ValueGetterX` extension.                                |
+| Debugging UI composition issues      | **UI Construction Discipline** (below)                           | Covers `build()` purity, widget extraction, and magic-number policy.       |
+| Error handling, logging, async flows | **Error & Async Rules** (below)                                  | Defines how to await, propagate, and log.                                  |
+
+---
+
+## Core Engineering Standards
+
+1. Always explore alternative solutions before coding; pick the option with the cleanest architecture and lowest future
+   cost.
+2. Generated artifacts (especially `*.g.dart`) are read-only. Change source inputs, then ask the user to run
+   `dart run build_runner build --delete-conflicting-outputs` (or their preferred build command).
+3. Every public API needs Effective-Dart documentation. Use `@template`, `@macro`, and `@docImport` to avoid
+   duplication. Explain the “why” when logic is non-trivial.
+4. Format/analyze with the Dart MCP tool after each change; never hand-wave analyzer output.
+
+---
+
+## Data Classes & `copyWith`
+
+- All state/data classes must implement `==`, `hashCode`, and a `copyWith` that distinguishes “not provided” from
+  “explicit null”.
+- Prefer `ValueGetter<T?>?` for every `copyWith` parameter and reuse this helper to keep the implementation terse:
+
 ```dart
 extension ValueGetterX<T> on ValueGetter<T>? {
-
-  /// Used to choose between two values:
-  /// either the result of this function (if provided) or [current].
-  ///
-  /// Commonly used in `copyWith` constructions involving [ValueGetter]:
-  ///
-  /// ```dart
-  ///   SomeState copyWith({
-  ///     ValueGetter<StateType>? stateType,
-  ///     ValueGetter<Entity?>? entity,
-  ///     ValueGetter<Object?>? error,
-  ///   }) => SomeState(
-  ///     stateType: stateType.or(this.stateType),
-  ///     entity: entity.or(this.entity),
-  ///     error: error.or(this.error),
-  ///   );
-  /// ```
+  /// Returns the provided getter's value if available; otherwise keeps [current].
   T or(T current) => this == null ? current : this!();
 }
 ```
-- After modifying a file, always run formatting and analysis: `dart format --line-length=120 . && dart analyze .`
-- After all work is complete, along with your message to the person, propose a Git commit message that follows standard change-description conventions.
-- If the `build` method becomes too long, extract parts of the UI into separate reusable widget classes.
-- The `build` method is a pure function. All code inside it must concern UI construction only, with no side effects
-- Encapsulate all business logic in separate services or state machines so that the UI layer remains as clean as possible.
-- Explicitly use await for asynchronous functions. Otherwise, errors from such functions will escape to the zone and will be hard to handle correctly
-- Avoid magic numbers
--	Add logging for critical actions. If code handles errors and suppresses them (which is usually incorrect), log such cases at warning level or higher.
-- Do not handle errors merely for the sake of handling them. Errors are of two types: expected and unexpected. If an error is expected, the UI should have a specific error state; or the code should have dedicated, well-considered logic for that specific exception. If an error is unexpected, treat it as such—do not deliberately handle or suppress it. Prefer to propagate errors upward (using rethrow or Error.throwWithStackTrace). If your code boils down to `try { /* danger */ } catch (e) { print(e); }`, reconsider whether that exception handling is needed.
 
+Add `ValueGetterX` to a shared utilities file before adopting the pattern if the project does not define it yet.
 
-## Architecture
-You can find the feature-based architecture description in [this document](feature_based_architecture.md).
+---
 
-## Feature Design Example
-You can find the guidelines for designing a new feature in [this document](how_to_new_feature.md).
+## UI Construction Discipline
+
+- Keep widget trees declarative. When a `build` method grows unwieldy, extract widgets into Widget classes with
+  descriptive names instead of burying logic inline.
+- Treat `build` as a pure function: no mutation, side effects, logging, or calls that depend on previous UI frames.
+- Encapsulate business logic in services, state-machines, or controllers. UI widgets should orchestrate state, not own
+  it.
+- Avoid magic numbers. Introduce constants or theme values with names that clarify intent.
+
+---
+
+## Error & Async Rules
+
+- `await` every `Future` inside `async` functions so that exceptions surface locally. No “fire-and-forget” unless
+  explicitly justified and documented.
+- Classify errors early:
+    - **Expected**: provide dedicated UI states or domain-specific handling.
+    - **Unexpected**: let the exception bubble up (use `rethrow` or `Error.throwWithStackTrace`) and log at warning
+      level
+      or higher.
+- Never write `try { /* danger */ } catch (e) { print(e); }`. Either remove the `try` or handle the exception properly.
+- Add structured logging for critical actions. When logic intentionally suppresses an error path, log with context to
+  aid debugging.
+
+---
+
+## Tooling & Architecture References
+
+- Architecture overview: [`feature_based_architecture.md`](feature_based_architecture.md)
+- Feature design workflow: [`how_to_new_feature.md`](how_to_new_feature.md)
+- Always revisit [`dart_flutter_features.md`](dart_flutter_features.md) for SDK-level capabilities before coding.
+- Need live scope examples? Compare [`inherited_model_example.md`](inherited_model_example.md) and
+  [`inherited_notifier_example.md`](inherited_notifier_example.md) to choose the right pattern.

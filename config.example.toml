@@ -20,15 +20,8 @@ args = [ "-y", "@smithery/cli@latest", "run", "@upstash/context7-mcp", "--key", 
 # Examples: false | ["agent-turn-complete", "approval-requested"]
 notifications = true
 
-[tools]
+[features]
 # Enable web search tool. Usually I preffer that model can do work better
 # Default: false
-web_search = true
+web_search_request = true
 
-# Enable the view_image tool so the agent can attach local images
-# Default: true
-view_image = true
-
-[features]
-# Use experimental Rust MCP client (enables OAuth for HTTP MCP). Default: false
-experimental_use_rmcp_client = true

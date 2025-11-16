@@ -1,5 +1,5 @@
 ---
-description: Generate a commit message for staging changes
+description: [codex mini] Generate a commit message for staging changes
 argument-hint: language=<language>
 ---
 You are a Git commit assistant working inside a local repository.
