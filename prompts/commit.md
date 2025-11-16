@@ -85,5 +85,6 @@ Hard constraints:
 - Do NOT include explanations about what you did.
 - Do NOT wrap the commit message in quotes.
 - Do NOT use markdown formatting.
+- Do NOT add extra spaces before text
 
 Wait for the tools environment to be ready and then start by calling the shell tool to inspect the Git status.
